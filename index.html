@@ -1,14 +1,172 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#ffffff" />
-    <meta name="description" content="Lightweight weather metasearch frontend" />
-    <title>Weather MetaSearch</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sky – Free Weather Forecast: Hourly, 7-Day, Air Quality &amp; Sunrise</title>
+<meta name="description" content="Sky is a fast, free and private weather website. Search any city for the current weather, hourly and 7-day forecast, air quality, UV index, wind and sunrise times from several open weather APIs.">
+<meta name="keywords" content="weather, forecast, hourly forecast, 7 day forecast, air quality, UV index, sunrise, sunset, open weather API, free weather website, Open-Meteo, MET Norway">
+<meta name="author" content="Sky">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#eef3f9">
+<link rel="canonical" href="https://example.com/">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="sitemap.xml">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='19' cy='17' r='9' fill='%23ffb81f'/%3E%3Cpath d='M15 40h19a8 8 0 0 0 .8-15.97A11 11 0 0 0 13.6 26.4 7 7 0 0 0 15 40z' fill='%23dbe6f3'/%3E%3C/svg%3E">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sky">
+<meta property="og:title" content="Sky – Free Weather Forecast">
+<meta property="og:description" content="Current weather, hourly and 7-day forecast, air quality and sunrise times for any place. No accounts, no tracking.">
+<meta property="og:url" content="https://example.com/">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Sky – Free Weather Forecast">
+<meta name="twitter:description" content="Current weather, hourly and 7-day forecast, air quality and sunrise times for any place.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://example.com/#website",
+      "url": "https://example.com/",
+      "name": "Sky",
+      "description": "Free weather forecast website using open weather APIs.",
+      "inLanguage": "en",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": { "@type": "EntryPoint", "urlTemplate": "https://example.com/?q={search_term_string}" },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://example.com/#app",
+      "name": "Sky",
+      "url": "https://example.com/",
+      "applicationCategory": "WeatherApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Current conditions",
+        "Hourly forecast",
+        "7-day forecast",
+        "Air quality and UV index",
+        "Sunrise and sunset",
+        "Light and dark mode",
+        "Metasearch place lookup across several providers"
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+/* Apply the saved or system theme before first paint to avoid a flash. */
+(function () {
+  var t = null;
+  try { t = JSON.parse(localStorage.getItem('sky.theme')); } catch (e) {}
+  if (t !== 'light' && t !== 'dark') {
+    t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to forecast</a>
+
+<header class="top">
+  <a class="brand" href="./" aria-label="Sky – home">
+    <svg viewBox="0 0 48 48" width="30" height="30" aria-hidden="true">
+      <circle cx="19" cy="17" r="9" style="fill:var(--sun)"/>
+      <path d="M15 40h19a8 8 0 0 0 .8-15.97A11 11 0 0 0 13.6 26.4 7 7 0 0 0 15 40z" style="fill:var(--cloud)"/>
+    </svg>
+    <span>sky</span>
+  </a>
+
+  <form class="search" id="search" role="search" autocomplete="off">
+    <svg class="s-ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="q" name="q" type="search" placeholder="Search a city or place" aria-label="Search a city or place" aria-autocomplete="list" aria-controls="results" enterkeyhint="search" spellcheck="false">
+    <details class="sources" id="sources">
+      <summary aria-label="Choose search sources" title="Search sources">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      </summary>
+      <div class="pop">
+        <p class="pop-title">Search sources</p>
+        <p class="pop-hint">Sky asks every ticked source at once and merges the answers.</p>
+        <div id="src-list"></div>
+      </div>
+    </details>
+    <ul id="results" class="results" role="listbox" aria-label="Search results" hidden></ul>
+  </form>
+
+  <div class="actions">
+    <button id="locate" class="icon-btn" type="button" aria-label="Use my location" title="Use my location">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <button id="units" class="icon-btn txt" type="button" aria-label="Switch units" title="Switch units">°C</button>
+
+    <div class="theme-switch" role="group" aria-label="Colour theme">
+      <button id="btn-light" class="ts-btn" type="button" aria-pressed="true" aria-label="Light mode" title="Light mode">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7M18.7 5.3L17 7M7 17l-1.7 1.7"/></g></svg>
+      </button>
+      <button id="btn-dark" class="ts-btn" type="button" aria-pressed="false" aria-label="Dark mode" title="Dark mode">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <h1 class="sr-only">Sky – free weather forecast for any place</h1>
+
+  <section id="hero" class="hero loading" aria-live="polite" aria-label="Current weather">
+    <p class="loading-msg">Loading forecast…</p>
+  </section>
+
+  <div id="providers" class="providers" aria-label="Weather data source"></div>
+
+  <section class="card" aria-labelledby="h-hourly">
+    <h2 id="h-hourly" class="card-title">Hourly</h2>
+    <ul id="hourly" class="hourly"></ul>
+  </section>
+
+  <section class="card" aria-labelledby="h-daily">
+    <h2 id="h-daily" class="card-title">7-day forecast</h2>
+    <ul id="daily" class="daily"></ul>
+  </section>
+
+  <section aria-labelledby="h-details">
+    <h2 id="h-details" class="sr-only">Details</h2>
+    <div id="details" class="details"></div>
+  </section>
+
+  <section id="sun" class="card sun-card" aria-labelledby="h-sun" hidden>
+    <h2 id="h-sun" class="card-title">Sun</h2>
+    <div id="sun-body"></div>
+  </section>
+
+  <noscript>
+    <p class="card">Sky needs JavaScript to fetch live weather from open weather APIs. Enable JavaScript and reload to see the forecast for your place.</p>
+  </noscript>
+
+  <section class="about card" aria-labelledby="h-about">
+    <h2 id="h-about" class="card-title">About Sky</h2>
+    <p>Sky is a lightweight weather website with a calm, Material-style interface. It shows the current conditions, an hourly outlook, a seven-day forecast, wind, humidity, pressure, UV index, air quality, moon phase and sunrise and sunset for any place on Earth.</p>
+    <p>Everything runs in your browser using free, open APIs. Forecasts come from <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a>, <a href="https://api.met.no/" rel="noopener">MET Norway</a> or <a href="https://wttr.in/" rel="noopener">wttr.in</a>, and you can switch between them. Place search works like a small metasearch engine: it asks <a href="https://open-meteo.com/en/docs/geocoding-api" rel="noopener">Open-Meteo</a>, <a href="https://nominatim.org/" rel="noopener">OpenStreetMap Nominatim</a> and <a href="https://photon.komoot.io/" rel="noopener">Photon</a> together and merges the results.</p>
+    <p>No accounts, no cookies and no tracking. Your chosen place, theme and units are stored only in your browser.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>Weather data: Open-Meteo (CC BY 4.0), MET Norway (CC BY 4.0), wttr.in · Places: Open-Meteo, © OpenStreetMap contributors, Photon</p>
+</footer>
+
+<script src="app.js" defer></script>
+</body>
 </html>
